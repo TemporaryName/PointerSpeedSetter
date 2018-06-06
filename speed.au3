@@ -1,3 +1,4 @@
+#NoTrayIcon
 #include <Misc.au3>
 #include <GUIConstantsEx.au3>
 #include <ColorConstants.au3>
@@ -14,7 +15,7 @@ Global $multiplier = ""
 Global $mode = "Pointer Speed:"
 Global Const $pSpeed = DllStructCreate("uint speed")
 Global Const $pAccel = DllStructCreate("uint thresh1;uint thresh2;uint accel")
-Global Const $appletVersion  = "v1.0.0.0"
+Global Const $appletVersion  = "v1.0.0.1"
 
 GetMouseSpeed()
 GetMouseAccel()
