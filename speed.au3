@@ -15,7 +15,7 @@ Global $multiplier = ""
 Global $mode = "Pointer Speed:"
 Global Const $pSpeed = DllStructCreate("uint speed")
 Global Const $pAccel = DllStructCreate("uint thresh1;uint thresh2;uint accel")
-Global Const $appletVersion  = "v1.0.0.1"
+Global Const $appletVersion  = "v1.0.1.0"
 
 GetMouseSpeed()
 GetMouseAccel()
@@ -44,7 +44,7 @@ Func MakeGUI()
   Local $sMultiplier = GUICtrlCreateLabel($multiplier           , $modeXcoord  , $modeYcoord)
                        GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
                        
-  Local $idInfo      = GUICtrlCreateButton("i"         , 0            , 0                     ,  10, 12, $BS_CENTER)
+  Local $idInfo      = GUICtrlCreateButton("i"         , 0            , 0                     ,  10, 12, $BS_RIGHT)
   Local $idStart     = GUICtrlCreateButton("Apply"     , $margin-5    , $mainHeight-20-$margin,  70, 25, $BS_DEFPUSHBUTTON)
   Local $idCustomize = GUICtrlCreateButton("Custom..." , $margin+65   , $mainHeight-20-$margin,  70, 25)
 
@@ -204,9 +204,9 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
   Local $dpi = 96
   Local $nominalHz = 120
   Local $PointsToDraw = 4
+  Local $graphMode = 1
   Local $lastDPI = $dpi
   Local $lastNominalHz = $nominalHz
-  Local $lastPointsToDraw = $PointsToDraw
 
   ; initializing variables
   Local $regCurveX = RegRead("HKEY_CURRENT_USER\Control Panel\Mouse","SmoothMouseXCurve")
@@ -224,7 +224,13 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
   GUISwitch($idGUICustomize)
   Local Const $inputWidth = 120
   Local Const $margin     = 13
+  Local Const $graphPosX  = $windowWidth-$margin-202
+  Local Const $graphPosY  = $margin+2  
+  Local Const $graphElements = DllStructCreate("ptr idGraph; ptr idXlabel; ptr idYlabel")
 
+
+
+  Local $idHelp = GUICtrlCreateButton("?", 0, 0, 15, 15)
   for $i = 0 to 3 step 1
     $idX[$i] = GUICtrlCreateInput(StringFormat("%.20g",$AccelCurveX[$i]), $margin               , $margin+15+(20*$i)      , $inputWidth    , 20)
     $idY[$i] = GUICtrlCreateInput(StringFormat("%.20g",$AccelCurveY[$i]), $margin+$inputWidth   , $margin+15+(20*$i)      , $inputWidth    , 20)
@@ -234,7 +240,6 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
                           GUICtrlCreateLabel("Configure Presets for:"   , $margin               , $margin+100             , $inputWidth*2  , 15, $SS_CENTER)
   Local $idScaling      = GUICtrlCreateLabel("100% (96 dpi)"            , $margin               , $margin+120             , $inputWidth    , 15, $SS_CENTER)
                           GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
-                          GUICtrlSetState(@SW_DISABLE,$idScaling)
   Local $idDPI          = GUICtrlCreateSlider(                            $margin               , $margin+135             , $inputWidth    , 20, $TBS_NOTICKS)
                           GUICtrlSetLimit($idDPI,8,0)
                           GUICtrlSetData( $idDPI,$dpi/96-1)
@@ -244,22 +249,16 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
   Local $idLinearize    = GUICtrlCreateButton("Linearize (MarkC Fix)"   , $margin               , $margin+160             , $inputWidth    , 25)
   Local $idDefault      = GUICtrlCreateButton("Default Curve (Win10)"   , $margin+$inputWidth   , $margin+160             , $inputWidth    , 25)
   Local $idApply        = GUICtrlCreateButton("Write to Registry"       , $margin               , $windowHeight-$margin-25, $inputWidth*2  , 25)
-  Local $idHelp         = GUICtrlCreateButton("?"                       , 0                     , 0                       , 15             , 15)
-
-
-
+                          GUICtrlSetState($idApply, $GUI_DISABLE)
 
   ; draw the Graph and its labels
-  Local $idXlabel, $idYlabel
   GUICtrlCreateLabel("0"     ,$windowWidth-$margin-214,$margin+204,10 ,-1,$SS_RIGHT)
   GUICtrlCreateLabel("counts",$windowWidth-$margin-202,$margin+204,202,-1,$SS_CENTER)
-  GUICtrlCreatelabel("pixels",$windowWidth-$margin-230,$margin+101,25)
-  Local $idGraph = DrawMousePlot($AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $idXlabel, $idYlabel, $windowWidth-$margin-202, $margin+2)
-  Local $idZoomOut  = GUICtrlCreateButton("+",$windowWidth-$margin-201,$margin+3 ,15,15,$BS_CENTER)
-  Local $idZoomIn   = GUICtrlCreateButton("-",$windowWidth-$margin-201,$margin+17,15,15,$BS_CENTER)
+  DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY) 
+  Local $idZoomOut      = GUICtrlCreateButton("+",$windowWidth-$margin-201   ,$margin+3    ,15,15,$BS_CENTER)
+  Local $idZoomIn       = GUICtrlCreateButton("-",$windowWidth-$margin-201   ,$margin+17   ,15,15,$BS_CENTER)
+  Local $idGraphMode    = GUICtrlCreateButton("pixel",$graphPosX-28,$graphPosY+90,28,20,$BS_RIGHT) 
 
-
-  ;GUISetState(@SW_SHOW,$idGUICustomize)
   ; loop until user exits
   Local $idMsg
   Local $run = 1
@@ -278,59 +277,104 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
       GUICtrlDelete($idScaling)
       $idScaling = GUICtrlCreateLabel($percent&"% ("&$dpi&" dpi)",$margin,$margin+120,$inputWidth,-1,$SS_CENTER)
       GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
-      GUICtrlSetState(@SW_DISABLE,$idScaling)
     EndIf
 
+
+    ; live update of interface
     $idMsg = 0
+        For $i = 0 to 3 step 1
+          $AccelCurveX[$i] = GUICtrlRead($idX[$i])
+          $AccelCurveY[$i] = GUICtrlRead($idY[$i])
+          If  $lastAccelCurveX[$i] - $AccelCurveX[$i] or $lastAccelCurveY[$i] - $AccelCurveY[$i] Then
+              $lastAccelCurveX[$i] = $AccelCurveX[$i]
+              $lastAccelCurveY[$i] = $AccelCurveY[$i]
+              $idMsg = 1
+              GUICtrlSetState($idApply,$GUI_ENABLE)
+          EndIf      
+        Next
+        If $lastDPI - $dpi or $lastNominalHz - $nominalHz Then
+           $lastDPI = $dpi
+          if  $lastNominalHz - $nominalHz then
+              $lastNominalHz = $nominalHz
+              $idMsg = 2
+          else
+              $idMsg = 1
+          endif
+        EndIf
+        If $idMsg Then
+          DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY)
+          if $idMsg == 2 then
+             GUICtrlDelete($idDefault)
+            if     $nominalHz == 120 then
+              $idDefault = GUICtrlCreateButton("Default Curve (Win10)", $margin+$inputWidth, $margin+160, $inputWidth, 25)
+            elseif $nominalHz == 150 then
+              $idDefault = GUICtrlCreateButton("Default Curve (Win7)" , $margin+$inputWidth, $margin+160, $inputWidth, 25)
+            endif
+          endif
+        EndIf
 
-    For $i = 0 to 3 step 1
-      $AccelCurveX[$i] = GUICtrlRead($idX[$i])
-      $AccelCurveY[$i] = GUICtrlRead($idY[$i])
 
-      If $lastAccelCurveX[$i]-$AccelCurveX[$i] or $lastAccelCurveY[$i]-$AccelCurveY[$i] or $lastNominalHz-$nominalHz or $lastDPI-$dpi or $lastPointsToDraw-$PointsToDraw Then
-         $lastAccelCurveX[$i] = $AccelCurveX[$i]
-         $lastAccelCurveY[$i] = $AccelCurveY[$i]
-         $lastDPI             = $dpi
-         $lastPointsToDraw    = $PointsToDraw
-
-         $idMsg += 1
-      EndIf      
-    Next
-
-    If $idMsg Then
-      GUICtrlDelete($idGraph)
-      GUICtrlDelete($idXlabel)
-      GUICtrlDelete($idYlabel)      
-      $idGraph = DrawMousePlot($AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $idXlabel, $idYlabel, $windowWidth-$margin-202,$margin+2)
-      if $lastNominalHz - $nominalHz then
-         $lastNominalHz = $nominalHz
-         GUICtrlDelete($idDefault)
-        if     $nominalHz == 120 then
-          $idDefault = GUICtrlCreateButton("Default Curve (Win10)", $margin+$inputWidth, $margin+160, $inputWidth, 25)
-        elseif $nominalHz == 150 then
-          $idDefault = GUICtrlCreateButton("Default Curve (Win7)" , $margin+$inputWidth, $margin+160, $inputWidth, 25)
-        endif
-      endif
-    EndIf
-
+    ; actions based on button trigger
     $idMsg = GUIGetMsg()
-
     Select
       Case $idMsg == $GUI_EVENT_CLOSE
         $run = 0
 
       Case $idMsg == $idHelp
-        MsgBox( -1, "Help", "The grey line on the plot indicates the identity line (along which your mouse input to pixel movement is 1-to-1.)" & @crlf & @crlf & "Nominal mouse/pointer speeds are in units of IPS (inches per second) where Microsoft assumes a 400 CPI @ 125 Hz mouse is being used on a certain DPI monitor. In actuality, only the raw counts are considered when the acceleration algorithm is applied." & @crlf & @crlf & "MarkC's fix essentially modifies (linearizes) the Windows mouse accel function such that it inverts the calculations in the mouse accel algorithm and compensates for binary truncation errors (hence the messy decimals), resulting in unmodified pointer counts." & @crlf & @crlf & "The appropriate MarkC fix applied depends on your display scaling due to the aforementioned truncation error, as well as your Windows Version due to Microsoft changing the algorithm going from Win7 to Win8 & onwards." & @crlf & @crlf & "Technically, if you have your pointer speed slider set to anything other than the central notch (5/10 in Control Panel), the truncation compensation would need to be be different once again. The fix applied here assumes that you're leaving it at the centre notch." & @crlf & @crlf & "For a more complete customization feature set, check out MarkC's Fix Builder which lets you do things like using the accel algorithm to set arbitrary pointer multiplier to downscale your effective cursor CPI on the desktop only, instead of using Povohat's driver which affects raw input programs too. Povohat's driver is still pretty kick-ass though, I highly recommend checking that out too." & @crlf & @crlf & "Trivia: the Pointer Options Control Panel applet is physically located at C:\WINDOWS\System32\main.cpl")
+        MsgBox( -1, "Help", "The grey line on the plot indicates the identity line (along which your mouse input to pixel movement is 1-to-1.)" _
+         & @crlf _
+         & @crlf _
+         & "Nominal mouse/pointer speeds are in units of IPS (inches per second) where Microsoft assumes a 400 CPI @ 125 Hz mouse is being used on a certain DPI monitor. In actuality, only the raw counts are considered when the acceleration algorithm is applied." _
+         & @crlf _
+         & @crlf _
+         & "MarkC's fix essentially modifies (linearizes) the Windows mouse accel function such that it inverts the calculations in the mouse accel algorithm and compensates for binary truncation errors (hence the messy decimals), resulting in unmodified pointer counts." _
+         & @crlf _
+         & @crlf _
+         & "The appropriate MarkC fix applied depends on your display scaling due to the aforementioned truncation error, as well as your Windows Version due to Microsoft changing the algorithm going from Win7 to Win8 & onwards." _
+         & @crlf _
+         & @crlf _
+         & "Technically, if you have your pointer speed slider set to anything other than the central notch (5/10 in Control Panel), the truncation compensation would need to be be different once again. The fix applied here assumes that you're leaving it at the centre notch." _
+         & @crlf _
+         & @crlf _
+         & "For a more complete customization feature set, check out MarkC's Fix Builder which lets you do things like using the accel algorithm to set arbitrary pointer multiplier to downscale your effective cursor CPI on the desktop only, instead of using Povohat's driver which affects raw input programs too. Povohat's driver is still pretty kick-ass though, I highly recommend checking that out too." _
+         & @crlf _
+         & @crlf _
+         & "Trivia: the Pointer Options Control Panel applet is physically located at C:\WINDOWS\System32\main.cpl, which includes both the Mouse settings applet as well as the key repeat applet." _
+         & @crlf _
+         & @crlf _
+         & "Check out FilterKeysSetter for natively making your key repeat/delay more responsive. I personally use a delay of 150ms whereas Windows doesn't typically let you go below 250ms even at the lowest setting in the Control Panel applet." _
+         & @crlf _
+         & @crlf _
+         & "Important notice: Windows Precision Trackpad uses the Accel curve here regardless of whether Enhance Pointer Precision is enabled or not. This means that changing the curve here, even if you're not using the accel with your mouse, will affect how the trackpad feels if it's using the Precision driver.") 
 
       Case $idMsg == $idZoomIn
         if $PointsToDraw > 1 then
           $PointsToDraw -= 1
+          DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY)
         endif
 
       Case $idMsg == $idZoomOut
         if $PointsToDraw < 4 then
-          $PointsToDraw += 1
+          $PointsToDraw += 1    
+          DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY)
         endif
+
+      Case $idMsg == $idGraphMode
+        Switch $graphMode
+          Case 1
+            $graphMode = 2
+            GUICtrlDelete($idGraphMode)
+            $idGraphMode = GUICtrlCreateButton("gain" ,$graphPosX-28,$graphPosY+90,28,20,$BS_RIGHT) 
+          Case 2
+            $graphMode = 3
+            GUICtrlDelete($idGraphMode)
+            $idGraphMode = GUICtrlCreateButton("scale",$graphPosX-32,$graphPosY+90,32,20,$BS_RIGHT) 
+          Case 3
+            $graphMode = 1
+            GUICtrlDelete($idGraphMode)
+            $idGraphMode = GUICtrlCreateButton("pixel",$graphPosX-28,$graphPosY+90,28,20,$BS_RIGHT) 
+        EndSwitch
+        DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY)
 
       Case $idMsg == $idLinearize
         for $i = 0 to 3 step 1
@@ -393,6 +437,7 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
           Next   
 
           MsgBox(0,"Success","Successfully written the following data to the Registry:" & @crlf & @crlf & "HKCU\Control Panel\Mouse\SmoothMouseXCurve: " & $regCurveX & @crlf & @crlf & "HKCU\Control Panel\Mouse\SmoothMouseYCurve: " & $regCurveY & @crlf & @crlf & "Customization will take effect on next logon.")
+          GUICtrlSetState($idApply,$GUI_DISABLE)
 
         Else
           $regCurveX = RegRead("HKEY_CURRENT_USER\Control Panel\Mouse", "SmoothMouseXCurve")
@@ -401,6 +446,7 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
         EndIf
 
     EndSelect
+
   WEnd
 EndFunc 
 
@@ -420,17 +466,15 @@ EndFunc
 
 
 
+Func DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $win, $PointsToDraw, $graphElements, $xPos, $yPos)
 
-
-
-
-
-Func DrawMousePlot($AccelCurveX, $AccelCurveY, $dpi, $win, $PointsToDraw, ByRef $idXlabel, ByRef $idYlabel, $xPos, $yPos)
-
-  Local $valueX[4], $valueY[4]
-  Local $mouseSpeedBound = 0
+  Local $valueX[4], $valueY[4], $gain[4]
+  Local $xScale, $yScale
+  Local $mouseSpeedBound   = 0
   Local $pointerSpeedBound = 0
-  Local Const $countScale = 400/125
+  Local $pointerGainBound  = 0
+  Local $maxGain = $pointerGainBound
+  Local Const $countScale  = 400/125
 
   for $i = 0 to $PointsToDraw-1 step 1
     $valueX[$i] = number($AccelCurveX[$i])
@@ -443,34 +487,111 @@ Func DrawMousePlot($AccelCurveX, $AccelCurveY, $dpi, $win, $PointsToDraw, ByRef 
     endif
   Next
 
-  Local $xScale = 200/$mouseSpeedBound
-  Local $yScale = 200/$pointerSpeedBound
-  Local $slopeScale = $mouseSpeedBound / $pointerSpeedBound / $dpi * 3.5 * $win
-  Local $idGraph = GUICtrlCreateGraphic($xPos,$yPos,202,202,0x07)
+  for $i = 0 to $PointsToDraw-1 step 1
+    if $i > 0 then
+      $gain[$i] = ($valueY[$i] - $valueY[$i-1])/($valueX[$i] - $valueX[$i-1])
+    elseif $i = 0 then
+      $gain[$i] =  $valueY[$i] / $valueX[$i]
+    endif
+    if $gain[$i] > $pointerGainBound then
+      $pointerGainBound = $gain[$i]
+      $maxGain = $pointerGainBound
+    endif
+  next
 
-  AutoItSetOption ( "GUICoordMode", 0 )
-  GUICtrlSetBkColor($idGraph, 0xffffff)
-  GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1,200)
-  GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0xdddddd)
-  GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, _min(200,200/$slopeScale), 201 - _min(200,200/$slopeScale)*$slopeScale)
-  GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0x000000)
-  GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1,200)
-  GUICtrlSetGraphic($idGraph, $GUI_GR_DOT , 1,200)
-  For $i = 0 to $PointsToDraw-1 step 1
-    GUICtrlSetGraphic($idGraph, $GUI_GR_DOT , $valueX[$i]*$xScale, 201-$valueY[$i]*$yScale)
-    GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, $valueX[$i]*$xScale, 201-$valueY[$i]*$yScale)
-    GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, $valueX[$i]*$xScale, 201-$valueY[$i]*$yScale)
-  Next
-  GUICtrlSetGraphic($idGraph, $GUI_GR_REFRESH, 100, 50)
-  AutoItSetOption ( "GUICoordMode", 1 )
+  Local $slopeScale = $mouseSpeedBound / $pointerSpeedBound / $dpi * 3.5 * $win  
+  Local $gainScale  = 65536 * 3.5 / int($dpi * 65536 / $win )
+  if $pointerGainBound < 2*$gainScale then
+     $pointerGainBound = 2*$gainScale
+  endif
 
-  $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale,1)             , $xPos+202-40, $yPos+202, 40, -1, $SS_RIGHT)
-  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
-  $idYlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale/$slopeScale,1) , $xPos-42    , $yPos-2  , 40, -1, $SS_RIGHT)
-  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
+  Local $idGraph  = DllStructGetData($graphElements, "idGraph" )
+  Local $idXlabel = DllStructGetData($graphElements, "idXlabel")
+  Local $idYlabel = DllStructGetData($graphElements, "idYlabel")
+  GUICtrlDelete( $idGraph  )
+  GUICtrlDelete( $idXlabel )
+  GUICtrlDelete( $idYlabel )
+  $idGraph = GUICtrlCreateGraphic($xPos,$yPos,202,202,0x07)
+  $xScale  = 200/$mouseSpeedBound
 
-  Return $idGraph
+  Switch $graphMode
+    Case 1
+      $yScale = 200/$pointerSpeedBound
+      AutoItSetOption ( "GUICoordMode", 0 )
+        GUICtrlSetBkColor($idGraph, 0xffffff)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0xdddddd)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE , 1,200)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_LINE , _min(200,200/$slopeScale), 201 - _min(200,200/$slopeScale)*$slopeScale)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0x000000)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE , 1,200)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_DOT  , 1,200)
+        For $i = 0 to $PointsToDraw-1 step 1
+          GUICtrlSetGraphic($idGraph, $GUI_GR_DOT , $valueX[$i]*$xScale, 201-$valueY[$i]*$yScale)
+          GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, $valueX[$i]*$xScale, 201-$valueY[$i]*$yScale)
+          GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, $valueX[$i]*$xScale, 201-$valueY[$i]*$yScale)
+        Next
+        GUICtrlSetGraphic($idGraph, $GUI_GR_REFRESH, 100, 50)
+      AutoItSetOption ( "GUICoordMode", 1 )
+      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale,1)            , $xPos+202-40, $yPos+202, 40, -1, $SS_RIGHT)
+                  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
+      $idYlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale/$slopeScale,1), $xPos-42    , $yPos-2  , 40, -1, $SS_RIGHT)
+                  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
+    Case 2
+      $yScale = 200/$pointerGainBound
+      AutoItSetOption ( "GUICoordMode", 0 )
+        GUICtrlSetBkColor($idGraph, 0xffffff)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0xdddddd)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1  , 201-$yScale*$gainScale)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, 200, 201-$yScale*$gainScale)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0x000000)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE , 1                 , 201-$yScale*$gain[0])
+        GUICtrlSetGraphic($idGraph, $GUI_GR_LINE , 1+$xScale*$valueX[0], 201-$yScale*$gain[0])
+        GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE , 1+$xScale*$valueX[0], 201-$yScale*$gain[0])
+        For $i = 1 to $PointsToDraw-1 step 1
+          GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, 1+$xScale*$valueX[$i-1], 201-$yScale*$gain[$i])
+          GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1+$xScale*$valueX[$i-1], 201-$yScale*$gain[$i])
+          GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, 1+$xScale*$valueX[$i]  , 201-$yScale*$gain[$i])
+          GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1+$xScale*$valueX[$i]  , 201-$yScale*$gain[$i])
+        Next
+        GUICtrlSetGraphic($idGraph, $GUI_GR_REFRESH, 100, 50)
+      AutoItSetOption ( "GUICoordMode", 1 )
+      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale, 1), $xPos+202-40, $yPos+202                   , 40, -1, $SS_RIGHT)
+                  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
+      $idYlabel = GUICtrlCreatelabel( round($maxGain/$gainScale, 1)         , $xPos-42    , $yPos+198-($yScale*$maxGain), 40, -1, $SS_RIGHT)
+                  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
+    Case 3
+      $yScale = 200/$pointerGainBound
+      Local $effSens, $transferFunction
+      Local $interval = 0
+      AutoitSetOption ( "GUICoordMode", 0 )
+        GUICtrlSetBkColor($idGraph, 0xffffff)        
+        GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0xdddddd)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1  , 201-$yScale*$gainScale)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, 200, 201-$yScale*$gainScale)
+        GUICtrlSetGraphic($idGraph, $GUI_GR_COLOR, 0x000000)
+        For $j = 1 to 200 step 1        
+          if $j/$xScale > $valueX[$interval] then
+            $interval += 1
+          endif
+          $transferFunction = $valueY[$interval] - ( $gain[$interval] * ($valueX[$interval] - $j/$xScale) )
+          $effSens = $transferFunction / $j * $xScale
+          if $j = 1 then
+            GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1, 201-$yScale*$effSens)
+          endif
+          GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, $j+1, 201-$yScale*$effSens)
+          GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, $j+1, 201-$yScale*$effSens)
+        Next
+        GUICtrlSetGraphic($idGraph, $GUI_GR_REFRESH, 100, 50)
+      AutoitSetOption ( "GUICoordMode", 1 )
+      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale, 1), $xPos+202-40, $yPos+202                   , 40, -1, $SS_RIGHT)
+                  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
+      $idYlabel = GUICtrlCreatelabel( round($maxGain/$gainScale, 1)         , $xPos-42    , $yPos+198-($yScale*$maxGain), 40, -1, $SS_RIGHT)
+                  GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
+  EndSwitch
 
+  DllStructSetData($graphElements, "idGraph" , $idGraph )
+  DllStructSetData($graphElements, "idXlabel", $idXlabel)
+  DllStructSetData($graphElements, "idYlabel", $idYlabel)
 EndFunc
 
 
