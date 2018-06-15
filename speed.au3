@@ -15,7 +15,7 @@ Global $multiplier = ""
 Global $mode = "Pointer Speed:"
 Global Const $pSpeed = DllStructCreate("uint speed")
 Global Const $pAccel = DllStructCreate("uint thresh1;uint thresh2;uint accel")
-Global Const $appletVersion  = "v1.0.1.0"
+Global Const $appletVersion  = "v1.0.1.1"
 
 GetMouseSpeed()
 GetMouseAccel()
@@ -257,7 +257,7 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
   DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY) 
   Local $idZoomOut      = GUICtrlCreateButton("+",$windowWidth-$margin-201   ,$margin+3    ,15,15,$BS_CENTER)
   Local $idZoomIn       = GUICtrlCreateButton("-",$windowWidth-$margin-201   ,$margin+17   ,15,15,$BS_CENTER)
-  Local $idGraphMode    = GUICtrlCreateButton("pixel",$graphPosX-28,$graphPosY+90,28,20,$BS_RIGHT) 
+  Local $idGraphMode    = GUICtrlCreateButton("pixel",$graphPosX-28-8,$graphPosY+90,28,20,$BS_RIGHT) 
 
   ; loop until user exits
   Local $idMsg
@@ -364,15 +364,15 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
           Case 1
             $graphMode = 2
             GUICtrlDelete($idGraphMode)
-            $idGraphMode = GUICtrlCreateButton("gain" ,$graphPosX-28,$graphPosY+90,28,20,$BS_RIGHT) 
+            $idGraphMode = GUICtrlCreateButton("gain" ,$graphPosX-28-8,$graphPosY+90,28,20,$BS_RIGHT) 
           Case 2
             $graphMode = 3
             GUICtrlDelete($idGraphMode)
-            $idGraphMode = GUICtrlCreateButton("scale",$graphPosX-32,$graphPosY+90,32,20,$BS_RIGHT) 
+            $idGraphMode = GUICtrlCreateButton("scale",$graphPosX-32-8,$graphPosY+90,32,20,$BS_RIGHT) 
           Case 3
             $graphMode = 1
             GUICtrlDelete($idGraphMode)
-            $idGraphMode = GUICtrlCreateButton("pixel",$graphPosX-28,$graphPosY+90,28,20,$BS_RIGHT) 
+            $idGraphMode = GUICtrlCreateButton("pixel",$graphPosX-28-8,$graphPosY+90,28,20,$BS_RIGHT) 
         EndSwitch
         DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY)
 
@@ -532,9 +532,9 @@ Func DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $win, $PointsTo
         Next
         GUICtrlSetGraphic($idGraph, $GUI_GR_REFRESH, 100, 50)
       AutoItSetOption ( "GUICoordMode", 1 )
-      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale,1)            , $xPos+202-40, $yPos+202, 40, -1, $SS_RIGHT)
+      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale,2)            , $xPos+202-40, $yPos+202, 40, -1, $SS_RIGHT)
                   GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
-      $idYlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale/$slopeScale,1), $xPos-42    , $yPos-2  , 40, -1, $SS_RIGHT)
+      $idYlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale/$slopeScale,2), $xPos-42    , $yPos-2  , 40, -1, $SS_RIGHT)
                   GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
     Case 2
       $yScale = 200/$pointerGainBound
@@ -553,11 +553,14 @@ Func DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $win, $PointsTo
           GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, 1+$xScale*$valueX[$i]  , 201-$yScale*$gain[$i])
           GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1+$xScale*$valueX[$i]  , 201-$yScale*$gain[$i])
         Next
+        For $i = 1 to 3 step 1
+          GUICtrlSetGraphic($idGraph, $GUI_GR_PIXEL, $i, 201-$yScale*$maxGain)
+        Next
         GUICtrlSetGraphic($idGraph, $GUI_GR_REFRESH, 100, 50)
       AutoItSetOption ( "GUICoordMode", 1 )
-      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale, 1), $xPos+202-40, $yPos+202                   , 40, -1, $SS_RIGHT)
+      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale, 2), $xPos+202-40, $yPos+202                   , 40, -1, $SS_RIGHT)
                   GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
-      $idYlabel = GUICtrlCreatelabel( round($maxGain/$gainScale, 1)         , $xPos-42    , $yPos+198-($yScale*$maxGain), 40, -1, $SS_RIGHT)
+      $idYlabel = GUICtrlCreatelabel( round($maxGain/$gainScale, 2)         , $xPos-42    , $yPos+198-($yScale*$maxGain), 40, -1, $SS_RIGHT)
                   GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
     Case 3
       $yScale = 200/$pointerGainBound
@@ -575,17 +578,23 @@ Func DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $win, $PointsTo
           endif
           $transferFunction = $valueY[$interval] - ( $gain[$interval] * ($valueX[$interval] - $j/$xScale) )
           $effSens = $transferFunction / $j * $xScale
-          if $j = 1 then
-            GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1, 201-$yScale*$effSens)
+          if $j == 1 then
+            GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, 1, round(201-$yScale*$effSens,1))
           endif
-          GUICtrlSetGraphic($idGraph, $GUI_GR_LINE, $j+1, 201-$yScale*$effSens)
-          GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE, $j+1, 201-$yScale*$effSens)
+          GUICtrlSetGraphic($idGraph, $GUI_GR_LINE , $j, round(201-$yScale*$effSens,1))
+          GUICtrlSetGraphic($idGraph, $GUI_GR_PIXEL, $j, round(201-$yScale*$effSens,1))
+          GUICtrlSetGraphic($idGraph, $GUI_GR_MOVE , $j, round(201-$yScale*$effSens,1))
+        Next
+        For $i = 1 to 200 step 1
+          if $i/2 - int($i/2) then
+            GUICtrlSetGraphic($idGraph, $GUI_GR_PIXEL, $i, 201-$yScale*$maxGain)
+          endif
         Next
         GUICtrlSetGraphic($idGraph, $GUI_GR_REFRESH, 100, 50)
       AutoitSetOption ( "GUICoordMode", 1 )
-      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale, 1), $xPos+202-40, $yPos+202                   , 40, -1, $SS_RIGHT)
+      $idXlabel = GUICtrlCreatelabel( round($mouseSpeedBound*$countScale, 2), $xPos+202-40, $yPos+202                   , 40, -1, $SS_RIGHT)
                   GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
-      $idYlabel = GUICtrlCreatelabel( round($maxGain/$gainScale, 1)         , $xPos-42    , $yPos+198-($yScale*$maxGain), 40, -1, $SS_RIGHT)
+      $idYlabel = GUICtrlCreatelabel( round($maxGain/$gainScale, 2)         , $xPos-42    , $yPos+198-($yScale*$maxGain), 40, -1, $SS_RIGHT)
                   GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
   EndSwitch
 
