@@ -13,6 +13,7 @@
 
 If _Singleton("Pointer Speed Setter", 1) == 0 Then
     WinActivate("Pointer Speed Setter")
+    WinActivate("Customize Windows Accel Curve")
     Exit
 EndIf
 
