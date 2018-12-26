@@ -6,6 +6,7 @@
 #include <StaticConstants.au3>
 #include <ButtonConstants.au3>
 #include <SliderConstants.au3>
+#include <WindowsConstants.au3>
 #include <Array.au3>
 #include <Math.au3>
 
@@ -41,7 +42,7 @@ Func MakeGUI()
   Local Const $sliderYcoord   = $margin + 20
   Local Const $sliderXcoord   = $margin - 6
 
-  Local $idGUI       = GUICreate("Pointer Speed Setter", $mainWidth   , $mainHeight)
+  Local $idGUI       = GUICreate("Pointer Speed Setter", $mainWidth   , $mainHeight,-1,-1,BitXOR($GUI_SS_DEFAULT_GUI, $WS_MINIMIZEBOX))
   Local $sMode       = GUICtrlCreateLabel(CalculateMultiplier() , $margin      , $modeYcoord, $mainWidth-$margin)
                        GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)                       
   Local $idApply     = GUICtrlCreateButton("Apply"     , $margin-5    , $mainHeight-20-$margin,  70, 25, $BS_DEFPUSHBUTTON)
@@ -167,7 +168,7 @@ Func MakeGUI()
 
       Case $idCustomize
            AutoItSetOption ( "GUICoordMode", 0 )
-           $idGUICustomize = GUICreate("Customize Windows Accel Curve", 513, 242)
+           $idGUICustomize = GUICreate("Customize Windows Accel Curve", 513, 242,-1,-1,BitXOR($GUI_SS_DEFAULT_GUI, $WS_MINIMIZEBOX))
            AutoItSetOption ( "GUICoordMode", 1 )
            GUISetState(@SW_SHOW   ,$idGUICustomize)
            GUISetState(@SW_DISABLE,$idGUI)
