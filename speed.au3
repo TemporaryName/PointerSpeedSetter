@@ -34,7 +34,7 @@ Func MakeGUI()
 
   Local Const $workAreaWidth  = 131
   Local Const $workAreaHeight = 202
-  Local Const $margin         = 15
+  Local Const $margin         = 16
   Local Const $mainWidth      = $workAreaWidth  + $margin + $margin
   Local Const $mainHeight     = $workAreaHeight + $margin + $margin
   Local Const $modeXcoord     = $margin + 105
