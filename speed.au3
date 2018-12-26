@@ -34,7 +34,7 @@ Func MakeGUI()
 
   Local Const $workAreaWidth  = 131
   Local Const $workAreaHeight = 202
-  Local Const $margin         = 20
+  Local Const $margin         = 15
   Local Const $mainWidth      = $workAreaWidth  + $margin + $margin
   Local Const $mainHeight     = $workAreaHeight + $margin + $margin
   Local Const $modeXcoord     = $margin + 105
@@ -47,7 +47,7 @@ Func MakeGUI()
                        GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)                       
   Local $idApply     = GUICtrlCreateButton("Apply"     , $margin-5    , $mainHeight-20-$margin,  70, 25, $BS_DEFPUSHBUTTON)
                        GUICtrlSetState($idApply,$GUI_DISABLE)
-  Local $idCustomize = GUICtrlCreateButton("Custom..." , $margin+65   , $mainHeight-20-$margin,  70, 25)
+  Local $idCustomize = GUICtrlCreateButton("Custom..." , $margin+66   , $mainHeight-20-$margin,  70, 25)
   Local $idInfo      = GUICtrlCreateButton(" i"         , 0            , 0                     ,  13, 13, $BS_LEFT)
 
   Local $lSlider     = MakeMouseSpeedSlider(             $sliderXcoord, $sliderYcoord)  
