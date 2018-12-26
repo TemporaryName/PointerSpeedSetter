@@ -11,6 +11,12 @@
 #include <Math.au3>
 
 
+If _Singleton("Pointer Speed Setter", 1) == 0 Then
+    WinActivate("Pointer Speed Setter")
+    Exit
+EndIf
+
+
 Global $Speed = 0xa
 Global $Accel[3]; = [0x0,0x0,0x0]
 Global $gCycle = 0
