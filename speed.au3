@@ -174,12 +174,12 @@ Func MakeGUI()
 
       Case $idCustomize
            AutoItSetOption ( "GUICoordMode", 0 )
-           $idGUICustomize = GUICreate("Customize Windows Accel Curve", 513, 242,-1,-1,BitXOR($GUI_SS_DEFAULT_GUI, $WS_MINIMIZEBOX))
+           $idGUICustomize = GUICreate("Customize Windows Accel Curve", 513, 234,-1,-1,BitXOR($GUI_SS_DEFAULT_GUI, $WS_MINIMIZEBOX))
            AutoItSetOption ( "GUICoordMode", 1 )
            GUISetState(@SW_SHOW   ,$idGUICustomize)
            GUISetState(@SW_DISABLE,$idGUI)
            GUISetState(@SW_HIDE   ,$idGUI)
-           CustomizeAccel($idGUICustomize, 513, 242)
+           CustomizeAccel($idGUICustomize, 513, 234)
            GUISetState(@SW_SHOW   ,$idGUI)
            GUISetState(@SW_ENABLE ,$idGUI)
            GUISetState(@SW_RESTORE,$idGUI)
@@ -217,7 +217,7 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
   ; start drawing the GUI
   GUISwitch($idGUICustomize)
   Local Const $inputWidth = 120
-  Local Const $margin     = 13
+  Local Const $margin     = 12
   Local Const $graphPosX  = $windowWidth-$margin-202
   Local Const $graphPosY  = $margin+2  
   Local Const $graphElements = DllStructCreate("ptr idGraph; ptr idXlabel; ptr idYlabel")
@@ -230,6 +230,7 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
     $idY[$i] = GUICtrlCreateInput(StringFormat("%.20g",$AccelCurveY[$i]), $margin+$inputWidth   , $margin+15+(20*$i)      , $inputWidth    , 20)
   next
   Local $idMouseSpeed   = GUICtrlCreateLabel("Nominal Mouse Speed"      , $margin               , $margin                 , $inputWidth    , 15, $SS_CENTER)
+                          GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)
   Local $idPointerSpeed = GUICtrlCreateLabel("Nominal Pointer Speed"    , $margin+$inputWidth   , $margin                 , $inputWidth    , 15, $SS_CENTER)
                           GUICtrlCreateLabel("Configure Presets for:"   , $margin               , $margin+100             , $inputWidth*2  , 15, $SS_CENTER)
   Local $idScaling      = GUICtrlCreateLabel("100% (96 dpi)"            , $margin               , $margin+120             , $inputWidth    , 15, $SS_CENTER)
