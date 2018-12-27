@@ -83,6 +83,7 @@ Func MakeGUI()
   Local $lastSliderSpeed=GUICtrlRead($lSlider)
   Local $lastAccelRadio=AccessAccelRadio($idRadio0,$idRadio1,$idRadio2)
   Local $idMsg
+  GUISetIcon("main_100.ico")
   GUISetState(@SW_SHOW,$idGUI)
   While 1
     Sleep(10)
