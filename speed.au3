@@ -1,5 +1,7 @@
 #NoTrayIcon
+#include <Math.au3>
 #include <Misc.au3>
+#include <Array.au3>
 #include <GUIConstants.au3>
 #include <GUIConstantsEx.au3>
 #include <ColorConstants.au3>
@@ -7,8 +9,6 @@
 #include <ButtonConstants.au3>
 #include <SliderConstants.au3>
 #include <WindowsConstants.au3>
-#include <Array.au3>
-#include <Math.au3>
 #include "StuffCopiedFromWeb.au3"
 
 If _Singleton("Pointer Speed Setter", 1) == 0 Then
