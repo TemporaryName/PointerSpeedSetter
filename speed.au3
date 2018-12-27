@@ -253,7 +253,7 @@ Func CustomizeAccel(ByRef $idGUICustomize, $windowWidth, $windowHeight)
   DrawMousePlot($graphMode, $AccelCurveX, $AccelCurveY, $dpi, $nominalHz, $PointsToDraw, $graphElements, $graphPosX, $graphPosY) 
   Local $idZoomOut      = GUICtrlCreateButton("+",$windowWidth-$margin-201   ,$margin+3    ,15,15,$BS_CENTER)
   Local $idZoomIn       = GUICtrlCreateButton("-",$windowWidth-$margin-201   ,$margin+17   ,15,15,$BS_CENTER)
-  Local $idGraphMode    = GUICtrlCreateButton("pixel",$graphPosX-28-8,$graphPosY+90,33,20,$BS_CENTER) 
+  Local $idGraphMode    = GUICtrlCreateButton("pixel",$graphPosX-40,$graphPosY+90,33,20,$BS_CENTER) 
   Local $idValid
   While 1
     $percent = GUICtrlRead($idDPI) * 25 + 100
