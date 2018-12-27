@@ -50,12 +50,12 @@ Func MakeGUI()
   Local Const $sliderXcoord   = $margin - 6
 
   Local $idGUI       = GUICreate("Pointer Speed Setter", $mainWidth   , $mainHeight,-1,-1,BitXOR($GUI_SS_DEFAULT_GUI, $WS_MINIMIZEBOX))
+  Local $idInfo      = GUICtrlCreateButton(" i"        , 0            , 0                     ,  13, 13, $BS_LEFT)
   Local $sMode       = GUICtrlCreateLabel(CalculateMultiplier() , $margin      , $modeYcoord, $mainWidth-$margin)
                        GUICtrlSetBkColor(-1, $GUI_BKCOLOR_TRANSPARENT)                       
   Local $idApply     = GUICtrlCreateButton("Apply"     , $margin-5    , $mainHeight-20-$margin,  70, 25, $BS_DEFPUSHBUTTON)
                        GUICtrlSetState($idApply,$GUI_DISABLE)
   Local $idCustomize = GUICtrlCreateButton("Custom..." , $margin+66   , $mainHeight-20-$margin,  70, 25)
-  Local $idInfo      = GUICtrlCreateButton(" i"         , 0            , 0                     ,  13, 13, $BS_LEFT)
 
   Local $lSlider     = MakeMouseSpeedSlider(             $sliderXcoord, $sliderYcoord)  
 
