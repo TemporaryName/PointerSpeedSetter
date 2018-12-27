@@ -9,7 +9,7 @@
 #include <WindowsConstants.au3>
 #include <Array.au3>
 #include <Math.au3>
-#include "CopyPastedFromInternet.au3"
+#include "StuffCopiedFromWeb.au3"
 
 If _Singleton("Pointer Speed Setter", 1) == 0 Then
     WinActivate("Pointer Speed Setter")
