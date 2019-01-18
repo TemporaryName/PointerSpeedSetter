@@ -9,7 +9,7 @@
 #include <ButtonConstants.au3>
 #include <SliderConstants.au3>
 #include <WindowsConstants.au3>
-#include "StuffCopiedFromWeb.au3"
+#include "RippedFromWeb.au3"
 
 If _Singleton("Pointer Speed Setter", 1) == 0 Then
     WinActivate("Pointer Speed Setter")
